@@ -4,7 +4,7 @@ from capyle.utils import is_valid_integer
 
 
 class _GridDimensionsUI(tk.Frame, _ConfigUIComponent):
-    DEFAULT = 200
+    DEFAULT = 500
     ROWS = 'rows'
     COLS = 'cols'
 
