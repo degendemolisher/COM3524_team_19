@@ -114,7 +114,7 @@ class Grid2D(Grid):
         else:
             sys.exit("Invalid wrap {} of type {}".format(wrap, type(wrap)))
 
-    def get_neighbour_states(self, applyneighbourhood=True):
+    def get_neighbour_states(self, applyneighbourhood=True) -> np.ndarray:
         """Return the 8 arrays of each neighbours current state"""
         grid = self.wrapping_grid
         if applyneighbourhood:
@@ -132,7 +132,7 @@ class Grid2D(Grid):
         se = nhood_arr[2, 2] * grid[2:, 2:]
         return np.array([nw, n, ne, w, e, sw, s, se])
 
-    def count_neighbours(self, neighbour_states):
+    def count_neighbours(self, neighbour_states) -> dict:
         """
         Taking the 8 neighbour arrays, return n arrays of how many
         neighbours of each state each cell are in each state,
