@@ -122,6 +122,38 @@ def transition_function(grid, neighbourstates, neighbourcounts) -> tuple:
     
     return grid
 
+def create_initial_state(grid):
+    """Create the initial state of the grid"""
+    chaparral_state = S_20
+    lake_state = S_40
+    dense_forest_state = S_30
+    canyon_scrubland_state = S_10
+
+    # Scaling factor (50x50 to 500x500)
+    scale = 10
+
+    # Set chaparral areas (yellow background in the 50x50 grid)
+    grid.grid[:, :] = chaparral_state
+
+    # HOW [ROW:COL]
+
+    # Set dense forest (dark green area on 50x50 grid)
+    grid.grid[15*scale:20*scale, 30*scale:int(42.5*scale)] = dense_forest_state # right rectangle
+    grid.grid[int(7.5*scale):10*scale, 0*scale:10*scale] = dense_forest_state # left rectangle
+    grid.grid[int(7.5*scale):40*scale, 10*scale:20*scale] = dense_forest_state # middle rectangle
+
+    # Set lake (blue area on 50x50 grid)
+    grid.grid[40*scale:int(42.5*scale), 15*scale:30*scale] = lake_state # left lake
+    grid.grid[int(27.5*scale):40*scale, int(42.5*scale):45*scale] = lake_state # right lake
+
+    # Set canyon scrubland (light green area on 50x50 grid)
+    grid.grid[int(22.5*scale):25*scale, 25*scale:int(42.5*scale)] = canyon_scrubland_state # left scrubland
+
+    # Set initial burning cells
+    grid.grid[23*scale, 25*scale] = S_21
+
+    return grid
+
 
 def main():
     """ Main function that sets up, runs and saves CA"""
@@ -131,11 +163,8 @@ def main():
     # Create grid object using parameters from config + transition function
     grid = Grid2D(config, transition_function)
 
-    # TEST: patch of 100x100 in the center as burning chaparral (S_21)
-    center_x, center_y = GRID[0] // 2, GRID[1] // 2
-    patch_size = 50  # Adjust patch size as needed
-    grid.grid[center_x - patch_size // 2:center_x + patch_size // 2,
-              center_y - patch_size // 2:center_y + patch_size // 2] = S_11
+    # Create the initial state of the grid
+    grid = create_initial_state(grid)
 
     # Run the CA, save grid state every generation to timeline
     timeline = grid.run()
