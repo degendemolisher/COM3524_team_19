@@ -34,7 +34,7 @@ class CAConfig(object):
         # grid dimensions
         if self.grid_dims is None:
             if self.dimensions == 2:
-                self.grid_dims = (200, 200)
+                self.grid_dims = (500, 500)
             else:
                 self.grid_dims = gens_to_dims(self.num_generations)
 

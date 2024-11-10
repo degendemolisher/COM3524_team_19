@@ -35,8 +35,8 @@ STATES = (S_10, S_11, S_12, # canyon scrubland
           S_20, S_21, S_22, # chaparral
           S_30, S_31, S_32, # dense forest
           S_40, S_41, S_42) # lake
-GRID = (50, 50)
-GENERATIONS = 100
+GRID = (500, 500)
+GENERATIONS = 200
 
 
 def hex_to_rgb(hex_code):
@@ -130,6 +130,12 @@ def main():
 
     # Create grid object using parameters from config + transition function
     grid = Grid2D(config, transition_function)
+
+    # TEST: patch of 100x100 in the center as burning chaparral (S_21)
+    center_x, center_y = GRID[0] // 2, GRID[1] // 2
+    patch_size = 50  # Adjust patch size as needed
+    grid.grid[center_x - patch_size // 2:center_x + patch_size // 2,
+              center_y - patch_size // 2:center_y + patch_size // 2] = S_11
 
     # Run the CA, save grid state every generation to timeline
     timeline = grid.run()
