@@ -38,6 +38,22 @@ STATES = (S_10, S_11, S_12, # canyon scrubland
 GRID = (500, 500)
 GENERATIONS = 200
 
+BURNING = {
+    "time": {
+        "scrubland": 1,
+        "chaparral": 3,
+        "forest": 10,
+        "lake": 0
+    },
+    "prob": {
+        "scrubland": 0.8,
+        "chaparral": 0.4,
+        "forest": 0.1,
+        "lake": 0
+    }
+}
+global burning_time
+burning_time = np.zeros(GRID)
 
 def hex_to_rgb(hex_code):
     hex_code = hex_code.lstrip('#')
@@ -115,6 +131,8 @@ def transition_function(grid, neighbourstates, neighbourcounts) -> tuple:
     # cell has to be alive
     catch_fire = (grid % 3 == 0) & (np.random.rand(*grid.shape) < burning_counts * 0.1)
     grid[catch_fire] += 1
+
+    # burning_time = 
     
     # probablity of burning cell to burn out
     burn_out = (grid % 3 == 1) & (np.random.rand(*grid.shape) < 0.1)
@@ -162,7 +180,6 @@ def main():
 
     # Create grid object using parameters from config + transition function
     grid = Grid2D(config, transition_function)
-
     # Create the initial state of the grid
     grid = create_initial_state(grid)
 
