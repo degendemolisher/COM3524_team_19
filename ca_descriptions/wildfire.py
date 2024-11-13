@@ -39,18 +39,18 @@ GRID = (500, 500)
 GENERATIONS = 200
 
 BURNING = {
-    "time": {
-        "scrubland": 1,
-        "chaparral": 3,
-        "forest": 10,
-        "lake": 0
-    },
-    "prob": {
-        "scrubland": 0.8,
-        "chaparral": 0.4,
-        "forest": 0.1,
-        "lake": 0
-    }
+    "time": [
+        2, # canyon scrubland
+        8, # chaparral
+        30, # dense forest
+        0 # lake
+        ],
+    "prob": [
+        0.99, # canyon scrubland
+        0.5, # chaparral
+        0.1, # dense forest
+        0 # lake
+        ]
 }
 global burning_time
 burning_time = np.zeros(GRID)
@@ -93,8 +93,22 @@ def setup(args):
 def transition_function(grid, neighbourstates, neighbourcounts) -> tuple:
     """Function to apply the transition rules
     and return the new grid"""
+
+    # ____________BURNOUT RULES____________
+    # burning tick, decrement burning time
+    global burning_time
+    burning_time = np.maximum(burning_time - 1, 0)
+
+    # burn out burning cells if burning time is 0
+    grid[(grid % 3 == 1) & (burning_time == 0)] += 1
+    # ______________________________________
+
+    current_alive = (grid % 3 == 0)
+    current_burning = (grid % 3 == 1)
+    current_burnt = (grid % 3 == 2)
     
-    # __________WIND STUFF__________
+    # __________WIND STUFF UNUSED__________
+    # TODO: wind direction, use in ignition rules
     # wind multiplier
     multi = 0.3
     # burn chance facing wind
@@ -122,25 +136,23 @@ def transition_function(grid, neighbourstates, neighbourcounts) -> tuple:
                    M,    m,
                    M, 1, m]
     # ______________________________
-    
-    # TODO: burning mask (only check for burning cells)
-    
+
+    # ____________IGNITION RULES____________
+    # TODO: ignition probability
     # no. burning neighbours
     burning_counts = neighbourcounts[S_11] + neighbourcounts[S_21] + neighbourcounts[S_31] + neighbourcounts[S_41]
-    # cell has (# burning neighbours * 0.1) probability to catch fire
-    # cell has to be alive
-    catch_fire = (grid % 3 == 0) & (np.random.rand(*grid.shape) < burning_counts * 0.1)
+    # alive cell has (# burning neighbours * 0.1) probability to catch fire
+    catch_fire = current_alive & (np.random.rand(*grid.shape) < burning_counts * 0.1)
     grid[catch_fire] += 1
-
-    # burning_time = 
-    
-    # probablity of burning cell to burn out
-    burn_out = (grid % 3 == 1) & (np.random.rand(*grid.shape) < 0.1)
-    grid[burn_out] += 1
+    # set burning time for new burning cells
+    for i, state in enumerate([S_11, S_21, S_31, S_41]):
+        cells_to_set = catch_fire & (grid == state)
+        burning_time[cells_to_set] = BURNING["time"][i]
+    # ______________________________________
     
     return grid
 
-def create_initial_state(grid):
+def create_initial_state(grid: Grid2D) -> Grid2D:
     """Create the initial state of the grid"""
     chaparral_state = S_20
     lake_state = S_40
@@ -167,8 +179,17 @@ def create_initial_state(grid):
     # Set canyon scrubland (light green area on 50x50 grid)
     grid.grid[int(22.5*scale):25*scale, 25*scale:int(42.5*scale)] = canyon_scrubland_state # left scrubland
 
-    # Set initial burning cells
-    grid.grid[23*scale, 25*scale] = S_21
+    # Set multiple initial burning cells
+    init_burning_cells = np.random.rand(*grid.grid.shape) < 0.0001
+    grid.grid[init_burning_cells] += 1
+
+    # set init burning cells time
+    global burning_time
+    # iter thru all burning states and set their time
+    for i, state in enumerate([S_11, S_21, S_31, S_41]):
+        # get cells of each land type (burning)
+        burning = grid.grid == state
+        burning_time[burning] = BURNING["time"][i]
 
     return grid
 
