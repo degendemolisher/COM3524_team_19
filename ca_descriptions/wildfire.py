@@ -28,13 +28,16 @@ S_32 = 8
 S_40 = 9
 S_41 = 10
 S_42 = 11
+S_50 = 12
 
 # Types: 0* = canyon scrubland, 1* = chaparral, 2* = dense forest, 3* = lake
 # States: alive = *0, burning = *1, burnt = *2
 STATES = (S_10, S_11, S_12, # canyon scrubland
           S_20, S_21, S_22, # chaparral
           S_30, S_31, S_32, # dense forest
-          S_40, S_41, S_42) # lake
+          S_40, S_41, S_42, # lake
+          S_50) # town
+
 GRID = (500, 500)
 GENERATIONS = 200
 
@@ -74,7 +77,8 @@ def setup(args):
     config.state_colors = [hex_to_rgb('#FDFF07'), hex_to_rgb('#891A0A'), hex_to_rgb('#505001'), # canyon scrubland
                             hex_to_rgb('#BFBE02'), hex_to_rgb('#891A0A'), hex_to_rgb('#3B3B01'), # chaparral
                             hex_to_rgb('#506228'), hex_to_rgb('#891A0A'), hex_to_rgb('#191E0C'), # dense forest
-                            hex_to_rgb('#01AFF1'), hex_to_rgb('#891A0A'), hex_to_rgb('#00364B')] # lake
+                            hex_to_rgb('#01AFF1'), hex_to_rgb('#891A0A'), hex_to_rgb('#00364B'), # lake
+                            hex_to_rgb('#000000')] # town
     config.grid_dims = GRID
     config.num_generations = GENERATIONS
     config.wrap = False
@@ -179,9 +183,16 @@ def create_initial_state(grid: Grid2D) -> Grid2D:
     # Set canyon scrubland (light green area on 50x50 grid)
     grid.grid[int(22.5*scale):25*scale, 25*scale:int(42.5*scale)] = canyon_scrubland_state # left scrubland
 
+    # Set town (black area on 50x50 grid)
+    grid.grid[int(34*scale):int(36.25*scale), 24*scale:int(26.25*scale)] = S_50
+
     # Set multiple initial burning cells
-    init_burning_cells = np.random.rand(*grid.grid.shape) < 0.0001
-    grid.grid[init_burning_cells] += 1
+    # init_burning_cells = np.random.rand(*grid.grid.shape) < 0.0001
+    # grid.grid[init_burning_cells] += 1
+    
+    # Set burning cells at the power plant and proposed incinerator
+    grid.grid[15*scale, 5*scale] = S_21
+    grid.grid[0, int(49.9*scale)] = S_21
 
     # set init burning cells time
     global burning_time
