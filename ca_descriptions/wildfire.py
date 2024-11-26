@@ -175,7 +175,7 @@ def transition_function(grid, neighbourstates, neighbourcounts) -> tuple:
         ignition_prob[ignition_prob_mod == 0] = 0
         catch_fire = cells_to_check & (np.random.rand(*grid.shape) < ignition_prob)
         grid[catch_fire] += 1
-        burning_time[catch_fire] = BURNING["time"][i]
+        burning_time[catch_fire] = np.rint(BURNING["time"][i] * np.random.uniform(0.8, 1.2))
     # ______________________________________
     
     return grid
