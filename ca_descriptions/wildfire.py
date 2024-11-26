@@ -39,22 +39,31 @@ STATES = (S_10, S_11, S_12, # canyon scrubland
           S_50) # town
 
 GRID = (500, 500)
-GENERATIONS = 200
+GENERATIONS = 500
 
 BURNING = {
     "time": [
-        2, # canyon scrubland
-        8, # chaparral
-        30, # dense forest
+        5, # canyon scrubland
+        15, # chaparral
+        90, # dense forest
         0 # lake
         ],
-    "prob": [
-        0.99, # canyon scrubland
-        0.5, # chaparral
-        0.1, # dense forest
-        0 # lake
+    "prob": {
+        "max": [
+            1, # canyon scrubland
+            0.8, # chaparral
+            0.3, # dense forest
+            0 # lake
+        ],
+        "min": [
+            0.7, # canyon scrubland
+            0.3, # chaparral
+            0.05, # dense forest
+            0 # lake
         ]
+    }
 }
+
 global burning_time
 burning_time = np.zeros(GRID)
 
@@ -142,16 +151,18 @@ def transition_function(grid, neighbourstates, neighbourcounts) -> tuple:
     # ______________________________
 
     # ____________IGNITION RULES____________
-    # TODO: ignition probability
     # no. burning neighbours
     burning_counts = neighbourcounts[S_11] + neighbourcounts[S_21] + neighbourcounts[S_31] + neighbourcounts[S_41]
-    # alive cell has (# burning neighbours * 0.1) probability to catch fire
-    catch_fire = current_alive & (np.random.rand(*grid.shape) < burning_counts * 0.1)
-    grid[catch_fire] += 1
-    # set burning time for new burning cells
-    for i, state in enumerate([S_11, S_21, S_31, S_41]):
-        cells_to_set = catch_fire & (grid == state)
-        burning_time[cells_to_set] = BURNING["time"][i]
+    # alive cell has (min_prob + (# burning neighbours / 8) * (max_prob - min_prob)) probability to catch fire
+    ignition_prob_mod = burning_counts / 8
+    for i, state in enumerate([S_10, S_20, S_30, S_40]):
+        cells_to_check = grid == state
+        ignition_prob = BURNING["prob"]["min"][i] + ignition_prob_mod * (BURNING["prob"]["max"][i] - BURNING["prob"]["min"][i])
+        # set ignition prob to 0 if burning counts is 0
+        ignition_prob[ignition_prob_mod == 0] = 0
+        catch_fire = cells_to_check & (np.random.rand(*grid.shape) < ignition_prob)
+        grid[catch_fire] += 1
+        burning_time[catch_fire] = BURNING["time"][i]
     # ______________________________________
     
     return grid
