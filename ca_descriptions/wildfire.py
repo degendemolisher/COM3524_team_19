@@ -39,24 +39,30 @@ STATES = (S_10, S_11, S_12, # canyon scrubland
           S_50) # town
 
 GRID = (500, 500)
+# each timestep is 1 hour
 GENERATIONS = 500
+
+WIND = {
+    "direction": "N",
+    "speed": 0.98  # in [0, 1]
+}
 
 BURNING = {
     "time": [
-        5, # canyon scrubland
+        3, # canyon scrubland
         15, # chaparral
-        90, # dense forest
+        200, # dense forest
         0 # lake
-        ],
+    ],
     "prob": {
         "max": [
             1, # canyon scrubland
-            0.8, # chaparral
-            0.3, # dense forest
+            0.5, # chaparral
+            0.2, # dense forest
             0 # lake
         ],
         "min": [
-            0.7, # canyon scrubland
+            0.9, # canyon scrubland
             0.3, # chaparral
             0.05, # dense forest
             0 # lake
@@ -120,41 +126,48 @@ def transition_function(grid, neighbourstates, neighbourcounts) -> tuple:
     current_burning = (grid % 3 == 1)
     current_burnt = (grid % 3 == 2)
     
-    # __________WIND STUFF UNUSED__________
+    # __________WIND STUFF__________
     # TODO: wind direction, use in ignition rules
     # wind multiplier
-    multi = 0.3
+    multi = WIND["speed"]
     # burn chance facing wind
-    M = 1 + multi
+    M = 1 + min(1, multi)
     # burn chance against wind
-    m = 1 - multi
+    m = 1 - min(1, multi)
     
     # multiplier vector for each wind direction
     # [NW, N, NE, 
     #  W,     E, 
     #  SW, S, SE]
-    north_multi = [M, M, M,
-                   1,    1, 
-                   m, m, m]
-    
-    east_multi  = [m, 1, M,
-                   m,    M,
-                   m, 1, M]
-    
-    south_multi = [m, m, m,
-                   1,    1,
-                   M, M, M]
-    
-    west_multi  = [M, 1, m,
-                   M,    m,
-                   M, 1, m]
+    WIND_MULTI = {
+        "N": [M, M, M,
+              1,    1, 
+              m, m, m],
+        
+        "E": [m, 1, M,
+              m,    M,
+              m, 1, M],
+        
+        "S": [m, m, m,
+              1,    1,
+              M, M, M],
+        
+        "W": [M, 1, m,
+              M,    m,
+              M, 1, m],
+    }
     # ______________________________
 
     # ____________IGNITION RULES____________
-    # no. burning neighbours
-    burning_counts = neighbourcounts[S_11] + neighbourcounts[S_21] + neighbourcounts[S_31] + neighbourcounts[S_41]
-    # alive cell has (min_prob + (# burning neighbours / 8) * (max_prob - min_prob)) probability to catch fire
-    ignition_prob_mod = burning_counts / 8
+    # alive cell has (min_prob + (sum(burning_neighbours_multiplier) / 8) * (max_prob - min_prob)) probability to catch fire
+    # zero out non burning cells
+    neighbour_contrib = neighbourstates * (neighbourstates % 3 == 1)
+    # make contributions 1
+    neighbour_contrib[neighbour_contrib > 0] = 1
+    # wind multiplier
+    neighbour_contrib = np.tensordot(neighbour_contrib, WIND_MULTI[WIND["direction"]], axes=([0], [0]))
+    # normalise neighbour_contrib
+    ignition_prob_mod = neighbour_contrib / 8
     for i, state in enumerate([S_10, S_20, S_30, S_40]):
         cells_to_check = grid == state
         ignition_prob = BURNING["prob"]["min"][i] + ignition_prob_mod * (BURNING["prob"]["max"][i] - BURNING["prob"]["min"][i])
