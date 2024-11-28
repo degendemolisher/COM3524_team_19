@@ -44,7 +44,7 @@ GENERATIONS = 500
 
 WIND = {
     "direction": "N",
-    "speed": 0.98  # in [0, 1]
+    "speed": 0.999  # in [0, 1]
 }
 
 BURNING = {
@@ -57,12 +57,12 @@ BURNING = {
     "prob": {
         "max": [
             1, # canyon scrubland
-            0.5, # chaparral
+            0.7, # chaparral
             0.2, # dense forest
             0 # lake
         ],
         "min": [
-            0.9, # canyon scrubland
+            0.5, # canyon scrubland
             0.3, # chaparral
             0.05, # dense forest
             0 # lake
@@ -122,9 +122,9 @@ def transition_function(grid, neighbourstates, neighbourcounts) -> tuple:
     grid[(grid % 3 == 1) & (burning_time == 0)] += 1
     # ______________________________________
 
-    current_alive = (grid % 3 == 0)
-    current_burning = (grid % 3 == 1)
-    current_burnt = (grid % 3 == 2)
+    # current_alive = (grid % 3 == 0)
+    # current_burning = (grid % 3 == 1)
+    # current_burnt = (grid % 3 == 2)
     
     # __________WIND STUFF__________
     # TODO: wind direction, use in ignition rules
@@ -210,15 +210,49 @@ def create_initial_state(grid: Grid2D) -> Grid2D:
     # Set town (black area on 50x50 grid)
     grid.grid[int(34*scale):int(36.25*scale), 24*scale:int(26.25*scale)] = S_50
 
-    # Set multiple initial burning cells
-    # init_burning_cells = np.random.rand(*grid.grid.shape) < 0.0001
-    # grid.grid[init_burning_cells] += 1
+    # set initial burning cells
+    set_initial_burning_cells(grid, scale)
+
+    return grid
+
+def set_initial_burning_cells(grid: Grid2D, scale: int):
+    """Set the initial burning cells in the grid"""
     
     # Set burning cells at the power plant and proposed incinerator
-    grid.grid[15*scale, 5*scale] = S_21
-    grid.grid[0, int(49.9*scale)] = S_21
+    grid.grid[15*scale, 5*scale] += 1
+    grid.grid[0, int(49.9*scale)] += 1
 
     # set init burning cells time
+    global burning_time
+    # iter thru all burning states and set their time
+    for i, state in enumerate([S_11, S_21, S_31, S_41]):
+        # get cells of each land type (burning)
+        burning = grid.grid == state
+        burning_time[burning] = BURNING["time"][i]
+
+def create_testing_grid(grid: Grid2D) -> Grid2D:
+    """Grid for control testing"""
+    # make 125x500 grid for each land type
+    grid.grid[:, 0:125] = S_10
+    grid.grid[:, 125:250] = S_20
+    grid.grid[:, 250:375] = S_30
+    grid.grid[:, 375:500] = S_40
+    # create boundaries with S_40 (lake)
+    grid.grid[:, 124] = S_40
+    grid.grid[:, 249] = S_40
+    grid.grid[:, 374] = S_40
+    grid.grid[249:250, :] = S_40
+    # set initial burning cells at both ends of strips
+    grid.grid[0, 0 + 62] += 1
+    grid.grid[499, 0 + 62] += 1
+    grid.grid[0, 125 + 62] += 1
+    grid.grid[499, 125 + 62] += 1
+    grid.grid[0, 250 + 62] += 1
+    grid.grid[499, 250 + 62] += 1
+    grid.grid[0, 375 + 62] += 1
+    grid.grid[499, 375 + 62] += 1
+    
+    # set initial burning cells time
     global burning_time
     # iter thru all burning states and set their time
     for i, state in enumerate([S_11, S_21, S_31, S_41]):
@@ -237,7 +271,7 @@ def main():
     # Create grid object using parameters from config + transition function
     grid = Grid2D(config, transition_function)
     # Create the initial state of the grid
-    grid = create_initial_state(grid)
+    grid = create_testing_grid(grid)
 
     # Run the CA, save grid state every generation to timeline
     timeline = grid.run()
