@@ -38,14 +38,25 @@ STATES = (S_10, S_11, S_12, # canyon scrubland
           S_40, S_41, S_42, # lake
           S_50) # town
 
-GRID = (500, 500)
-# each timestep is 1 hour
-GENERATIONS = 500
+PROD = 1
 
-WIND = {
-    "direction": "N",
-    "speed": 0.999  # in [0, 1]
-}
+if PROD:
+    GRID = (500, 500)
+    # each timestep is 1 hour
+    GENERATIONS = 1000
+
+    WIND = {
+        "direction": "S",
+        "speed": 0.8  # in [0, 1]
+    }
+else:
+    GRID = (300, 300)
+    GENERATIONS = 600
+    WIND = {
+        "direction": "N",
+        "speed": 0.8  # in [0, 1]
+    }
+
 
 BURNING = {
     "time": [
@@ -58,12 +69,12 @@ BURNING = {
         "max": [
             1, # canyon scrubland
             0.7, # chaparral
-            0.2, # dense forest
+            0.5, # dense forest
             0 # lake
         ],
         "min": [
             0.5, # canyon scrubland
-            0.3, # chaparral
+            0.2, # chaparral
             0.05, # dense forest
             0 # lake
         ]
@@ -232,25 +243,22 @@ def set_initial_burning_cells(grid: Grid2D, scale: int):
 
 def create_testing_grid(grid: Grid2D) -> Grid2D:
     """Grid for control testing"""
-    # make 125x500 grid for each land type
-    grid.grid[:, 0:125] = S_10
-    grid.grid[:, 125:250] = S_20
-    grid.grid[:, 250:375] = S_30
-    grid.grid[:, 375:500] = S_40
+    # make 100x300 grid for each land type
+    grid.grid[:, 0:99] = S_10
+    grid.grid[:, 100:199] = S_20
+    grid.grid[:, 200:299] = S_30
     # create boundaries with S_40 (lake)
-    grid.grid[:, 124] = S_40
-    grid.grid[:, 249] = S_40
-    grid.grid[:, 374] = S_40
-    grid.grid[249:250, :] = S_40
+    grid.grid[:, 99] = S_40
+    grid.grid[:, 199] = S_40
+    grid.grid[:, 299] = S_40
+    grid.grid[149:150, :] = S_40
     # set initial burning cells at both ends of strips
-    grid.grid[0, 0 + 62] += 1
-    grid.grid[499, 0 + 62] += 1
-    grid.grid[0, 125 + 62] += 1
-    grid.grid[499, 125 + 62] += 1
-    grid.grid[0, 250 + 62] += 1
-    grid.grid[499, 250 + 62] += 1
-    grid.grid[0, 375 + 62] += 1
-    grid.grid[499, 375 + 62] += 1
+    grid.grid[0, 50] += 1
+    grid.grid[299,50] += 1
+    grid.grid[0, 150] += 1
+    grid.grid[299, 150] += 1
+    grid.grid[0, 250] += 1
+    grid.grid[299, 250] += 1
     
     # set initial burning cells time
     global burning_time
@@ -271,7 +279,10 @@ def main():
     # Create grid object using parameters from config + transition function
     grid = Grid2D(config, transition_function)
     # Create the initial state of the grid
-    grid = create_testing_grid(grid)
+    if PROD:
+        grid = create_initial_state(grid)
+    else:
+        grid = create_testing_grid(grid)
 
     # Run the CA, save grid state every generation to timeline
     timeline = grid.run()
