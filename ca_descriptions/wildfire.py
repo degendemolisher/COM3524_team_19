@@ -60,8 +60,8 @@ if PROD:
     GENERATIONS = 1000
 
     WIND = {
-        "direction": "S",
-        "speed": 0.8  # in [0, 1]
+        "direction": "N",
+        "speed": 0.9  # in [0, 1]
     }
 else:
     GRID = (300, 300)
