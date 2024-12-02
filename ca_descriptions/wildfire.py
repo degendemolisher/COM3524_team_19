@@ -9,10 +9,16 @@ This CA simulates a wildfire in a 2D grid. The grid is divided into different ty
 - Town
 
 How to run the code:
-1. In the GoL simulator save the code in ca_descriptions/wildfire.py
-2. Run the GoL simulator by running the command: python main.py
+1. In the CA simulator save the code in ca_descriptions/wildfire.py
+2. Run the CA simulator by running the command: python main.py
 3. In the GUI, select file > open and open the file ca_descriptions/wildfire.py
 4. Once loaded click "Apply configuration & run CA"
+
+The simulation will run for 1000 generations (1 hour per generation) and will show the spread of the wildfire in the grid.
+
+The wind direction and speed can be changed in the code.
+- To change to the test grid, set PROD = 0 below. (default 1)
+- To change wind direction and intensity, change the WIND_DIR (default "N") and WIND_INTENSITY (default 0.9) variable below.
 """
 
 # --- Set up executable path, do not edit ---
@@ -30,6 +36,14 @@ from capyle.ca import Grid2D, Neighbourhood, randomise2d
 import capyle.utils as utils
 import numpy as np
 
+# ________CONSTANTS TO CHANGE________
+PROD = 1
+WIND_DIR = "N"
+WIND_INTENSITY = 0.9
+# ___________________________________
+
+
+# State numbers
 S_10 = 0
 S_11 = 1
 S_12 = 2
@@ -52,16 +66,14 @@ STATES = (S_10, S_11, S_12, # canyon scrubland
           S_40, S_41, S_42, # lake
           S_50) # town
 
-PROD = 1
-
 if PROD:
     GRID = (500, 500)
     # each timestep is 1 hour
     GENERATIONS = 1000
 
     WIND = {
-        "direction": "N",
-        "speed": 0.9  # in [0, 1]
+        "direction": WIND_DIR,
+        "speed": WIND_INTENSITY  # in [0, 1]
     }
 else:
     GRID = (300, 300)
