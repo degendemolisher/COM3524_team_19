@@ -1,5 +1,19 @@
-# Name: Wildfire
-# Dimensions: 2
+"""
+Wildfire 2D CA Simulation
+
+This CA simulates a wildfire in a 2D grid. The grid is divided into different types of land, each with different properties. The land types are:
+- Canyon scrubland
+- Chaparral
+- Dense forest
+- Lake
+- Town
+
+How to run the code:
+1. In the GoL simulator save the code in ca_descriptions/wildfire.py
+2. Run the GoL simulator by running the command: python main.py
+3. In the GUI, select file > open and open the file ca_descriptions/wildfire.py
+4. Once loaded click "Apply configuration & run CA"
+"""
 
 # --- Set up executable path, do not edit ---
 import sys
